@@ -1,40 +1,31 @@
-%option noyywrap
-%option c++
-%option yylineno 
+%option noyywrap c++
 
 %{
-#include "Lexer.hpp"
+    #include "parser.tab.hh"
+
+    using namespace yy;
 %}
 
-%%
-
-"|"         { return TOKEN_DISJUNCTION; }
-"."         { return TOKEN_CONCAT; }
-"*"         { return TOKEN_KLEENE; }
-"+"         { return TOKEN_PLUS; }
-"?"         { return TOKEN_QUESTION; }
-"~"         { return TOKEN_NEG; }
-"("         { return TOKEN_LPAREN; }
-")"         { return TOKEN_RPAREN; }
-
-"a"         { return TOKEN_A; }
-"b"         { return TOKEN_B; }
-
-[ \t\n\r]+  { /* ignorar espacios */ }
-
-<<EOF>>    { return TOKEN_END; }
-
-.           { std::cerr << "Caracter inesperado: " << yytext << std::endl; }
+DIGITO [0-9]+
 
 %%
 
-int Lexer::yylex() {
-    return yyFlexLexer::yylex(); // delega en la base
+[ \t\r]+      ;
+
+\n            return parser::make_ENDL();
+
+"+"           return parser::make_PLUS();
+"*"           return parser::make_MULT();
+
+"("           return parser::make_LPAREN();
+")"           return parser::make_RPAREN();
+
+{DIGITO} {
+    return parser::make_NUMERO(std::stoi(yytext));
 }
 
-Lexer::Lexer(std::istream* in, std::ostream* out)
-    : yyFlexLexer(in, out) {}
-
-std::string Lexer::getText() const {
-    return YYText();
+. {
+    throw std::runtime_error("Caracter invalido");
 }
+
+%%
